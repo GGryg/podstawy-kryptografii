@@ -1,43 +1,63 @@
 package affine
 
+import (
+	"log"
+)
+
 const lowerCaseAlphabet = "abcdefghijklmnopqrstuvwxyz"
 const upperCaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 type MessageAndKey struct {
 	message string
 	key     [2]int
-	err     bool
 }
 
-func Encode(text string, key [2]int) string {
-	encoded := ""
+func (m MessageAndKey) GetKey() [2]int {
+	return m.key
+}
+
+func (m MessageAndKey) GetMessage() string {
+	return m.message
+}
+
+func Encrypt(text string, key [2]int) string {
+	if !CheckKey(key) {
+		log.Fatal("Nie poprawny klucz")
+	}
+	encrypted := ""
 
 	for _, c := range text {
 		if c >= 'a' && c <= 'z' {
-			encoded += string(lowerCaseAlphabet[(key[0]*int((26+(c-'a')))+key[1])%26])
-		}
-		if c >= 'A' && c <= 'Z' {
-			encoded += string(upperCaseAlphabet[(key[0]*int((26+(c-'A')))+key[1])%26])
+			encrypted += string(lowerCaseAlphabet[(key[0]*int((26+(c-'a')))+key[1])%26])
+		} else if c >= 'A' && c <= 'Z' {
+			encrypted += string(upperCaseAlphabet[(key[0]*int((26+(c-'A')))+key[1])%26])
+		} else {
+			encrypted += string(c)
 		}
 	}
 
-	return encoded
+	return encrypted
 }
 
-func Decode(encoded string, key [2]int) string {
-	decoded := ""
+func Decrypt(encrypted string, key [2]int) string {
+	if !CheckKey(key) {
+		log.Fatal("Nie poprawny klucz")
+	}
+
+	decrypted := ""
 	inverseKey := findInverseKey(key[0])
 
-	for _, c := range encoded {
+	for _, c := range encrypted {
 		if c >= 'a' && c <= 'z' {
-			decoded += string(lowerCaseAlphabet[(inverseKey*(int((26+(c-'a')))-key[1]))%26])
-		}
-		if c >= 'A' && c <= 'Z' {
-			decoded += string(upperCaseAlphabet[(inverseKey*(int((26+(c-'a')))-key[1]))%26])
+			decrypted += string(lowerCaseAlphabet[(inverseKey*(int((26+(c-'a')))-key[1]))%26])
+		} else if c >= 'A' && c <= 'Z' {
+			decrypted += string(upperCaseAlphabet[(inverseKey*(int((26+(c-'A')))-key[1]))%26])
+		} else {
+			decrypted += string(c)
 		}
 	}
 
-	return decoded
+	return decrypted
 }
 
 func nwd(a int, b int) int {
@@ -59,14 +79,52 @@ func findInverseKey(a int) int {
 }
 
 func CheckKey(key [2]int) bool {
-	reversedKey := findInverseKey(key[0])
+	if key[1] <= 0 && key[1] >= 26 {
+		return false
+	}
+
 	if nwd(key[0], 26) != 1 {
 		return false
 	}
 
-	if (key[0] * reversedKey) != 1 {
+	if findInverseKey(key[0]) == -1 {
 		return false
 	}
 
 	return true
+}
+
+func PlainTextKnown(plainText string, encrypted string) MessageAndKey {
+	var key [2]int
+	var decrypted string
+	coprimes := [...]int{1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25}
+guessing:
+	for _, a := range coprimes {
+		for b := 1; b < 27; b++ {
+			guess := Decrypt(encrypted, [2]int{a, b})
+
+			if guess[:len(plainText)] == plainText {
+				key[0] = a
+				key[1] = b
+				decrypted = guess
+				break guessing
+			}
+		}
+	}
+
+	return MessageAndKey{message: decrypted, key: key}
+}
+
+func BruteForce(encrypted string) []string {
+	var allPosibilities []string
+	coprimes := [...]int{1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25}
+
+	for _, a := range coprimes {
+		for b := 1; b < 27; b++ {
+			guess := Decrypt(encrypted, [2]int{a, b})
+			allPosibilities = append(allPosibilities, guess)
+		}
+	}
+
+	return allPosibilities
 }
