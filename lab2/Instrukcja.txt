@@ -1,0 +1,15 @@
+Autor: Grzegorz Grygorowicz
+# Uruchamianie programu:
+
+Uruchomienie programu:  python3 xor.py -[opcja]
+
+opcje:
+
+-p (przygotowanie tekstu do przykładu działania),
+-e (szyfrowanie),
+-k (kryptoanaliza wyłącznie w oparciu o kryptogram)
+
+
+
+
+
