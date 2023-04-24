@@ -11,8 +11,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, World")
-
 	if len(os.Args) != 3 {
 		printOptions("Podano nieodpowiednią ilość opcji")
 		return
@@ -31,7 +29,6 @@ func main() {
 			keyStr := file.ReadFromFile("data/key.txt")
 			key := int(keyStr[0] - '0')
 			plainText := file.ReadFromFile("data/plain.txt")
-			fmt.Println(plainText, key)
 			encrypted := caesar.Encrypt(plainText, key)
 
 			file.WriteToFile("data/crypto.txt", encrypted)
