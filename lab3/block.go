@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	inputFile, err := os.Open("images/ga.bmp")
+	inputFile, err := os.Open("plain.bmp")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,8 +41,8 @@ func save(data []byte, path string, message string) {
 	defer outputFile.Close()
 
 	//outputImage := image.NewPaletted(image.Rect(0, 0, 800, 800), palette)
-	// outputImage := image.NewGray(image.Rect(0, 0, 800, 800))
-	outputImage := image.NewAlpha(image.Rect(0, 0, 800, 800))
+	outputImage := image.NewGray(image.Rect(0, 0, 800, 800))
+	//outputImage := image.NewAlpha(image.Rect(0, 0, 800, 800))
 	copy(outputImage.Pix, data)
 
 	err = bmp.Encode(outputFile, outputImage)
@@ -66,25 +66,26 @@ func ecb(img []byte, size image.Point, blockSize int, keys [][16]byte) {
 		}
 	}
 
-	save(encoded, "images/e1.bmp", "ECB")
+	save(encoded, "ecb_crypto.bmp", "ECB")
 }
 
 func cbc(img []byte, size image.Point, blockSize int, keys [][16]byte) {
 	var encoded []byte
-	encoded = append(encoded, img[0]^0)
+	r := rand.Intn(len(img))
+	encoded = append(encoded, img[r]^keys[0][0])
 
 	for i := 1; i < size.X*size.Y; i++ {
-		encoded = append(encoded, encoded[i-1]^img[i]^keys[i%blockSize*128/blockSize][i%blockSize])
+		encoded = append(encoded, encoded[i-1]^img[i]^keys[i%((blockSize*blockSize*blockSize*blockSize*blockSize)/blockSize)][i%blockSize*2])
 	}
 
-	save(encoded, "images/e2.bmp", "CBC")
+	save(encoded, "cbc_crypto.bmp", "CBC")
 }
 
 func getKeys(blockSize int) [][16]byte {
 	var keys [][16]byte
 
-	for i := 0; i < blockSize; i++ {
-		key := md5.Sum([]byte(fmt.Sprintf("%f", rand.Float64()*float64(i))))
+	for i := 0; i < blockSize*blockSize*blockSize*blockSize; i++ {
+		key := md5.Sum([]byte(fmt.Sprintf("%f", rand.Float64()*float64(i*i))))
 		//key := sha1.Sum([]byte(fmt.Sprintf("%f", rand.Float64()*float64(i))))
 		//keyStr := hex.EncodeToString(key[:])
 		keys = append(keys, key)

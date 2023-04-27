@@ -1,0 +1,6 @@
+Autor: Grzegorz Grygorowicz
+
+Potrzeba paczki image/bmp do obsługi obrazów 
+można ją pobrać poleceniem go get -u golang.org/x/image/bmp albo go install
+
+uruchomienie programu go run block.go
